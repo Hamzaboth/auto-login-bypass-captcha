@@ -1,0 +1,17 @@
+url=
+username=
+username_field=
+password_field=
+login_button=
+iframe1=
+hcaptcha_button=
+iframe2=
+hcaptcha_menu=
+iframe3=
+hcaptcha_text_button=
+iframe4=
+hcatpcha_etc=
+iframe5=
+chatgpt_answer1=
+chatgpt_answer2=
+chatgptanswer3=
