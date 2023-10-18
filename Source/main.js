@@ -16,29 +16,31 @@ puppeteer_extra.use(StealthPlugin); // use the stealth plugin in to help deter b
 
 // FILE OBJECT AND READING SECRET DATA
 const file_io = require('fs'); // for file input and output
+// read static secrets and parse them into an object -> obj.field
 let secretdata = file_io.readFileSync('.secret.json');
 const secret = JSON.parse(secretdata);
-// read static secrets
-;
+
 
 // URL CONSTS FOR TESTING
 // const boturl = 'https://bot.sannysoft.com/'; // test if you look like a bot or not
-// const url = file_io.readFileSync('.secreturl').toString();
+
 
 const main = async () => {
-    // SETUP PAGE
-    // const browser = await p_extra.launch({
-    //     headless: false, // dont run headless, to see what is going on in the browser
-    //     args:  ['--disable-web-security', // disable a bunch of shit - might be overkill but something i found
-    //     '--disable-features=IsolateOrigins,site-per-process', 
-    //     '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
-    //     '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end'], 
+    const browser = await puppeteer_extra.launch({
+        executablePath: secret.EXEC_PATH,
+        defaultViewport: null, // wow so in fullscreen, it clicks the right button, in default view it accidently clicks the button
+        headless: false, // dont run headless, to see what is going on in the browser
+        // args: ['--disable-web-security', // disable a bunch of shit
+        //     '--disable-features=IsolateOrigins,site-per-process',
+        //     '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
+        //     '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end'],
 
-    // });
-    // let page = await browser.newPage();
-    // await page.goto(url, {
-    //     waitUntil: "networkidle2",
-    // });
+    });
+    let page = await browser.newPage();
+    await page.goto(url, {
+        // wait until the page is fully loaded? can be useful, but can be elonged with ads and such
+        waitUntil: "networkidle2",
+    });
 
     // testing
     console.log("USER: " + secret.USERNAME + "\nPASS: "+ secret.URL);
