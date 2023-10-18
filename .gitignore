@@ -1,4 +1,6 @@
 .secretsolution
 .secretphrases
+.secretfailed
+.secret*
 .secrets
 .secret.json

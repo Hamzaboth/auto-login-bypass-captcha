@@ -23,10 +23,12 @@ puppeteer_extra.use(StealthPlugin); // use the stealth plugin in to help deter b
 // FILE OBJECT
 const file_io = require('fs'); // for file input and output
 
+// read static secrets
+
 
 // URL CONSTS FOR TESTING
-const boturl = 'https://bot.sannysoft.com/'; // test if you look like a bot or not
-// const url = 
+// const boturl = 'https://bot.sannysoft.com/'; // test if you look like a bot or not
+// const url = file_io.readFileSync('.secreturl').toString();
 
 const main = async () => {
     // SETUP PAGE
