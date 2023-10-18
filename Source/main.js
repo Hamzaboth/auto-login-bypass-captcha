@@ -37,13 +37,214 @@ const main = async () => {
 
     });
     let page = await browser.newPage();
-    await page.goto(url, {
+    await page.goto(secret.URL, {
         // wait until the page is fully loaded? can be useful, but can be elonged with ads and such
         waitUntil: "networkidle2",
     });
 
-    // testing
-    console.log("USER: " + secret.USERNAME + "\nPASS: "+ secret.URL);
+    //  with page open, read file for passphrase
+    // worry about closing files later
+    let phrases = file_io.readFileSync('.secretphrases').toString();
+    phrases = phrases.split('\n');
+
+    // CHECK PASSPHRASE AGAINST USED PREVIOUSLY
+    let passphrase = 'wrong';
+    let used_words = file_io.readFileSync(".secretfailed").toString();
+
+    for (const word of phrases) {
+        if (!(used_words.includes(word))) {
+            passphrase = word;
+            break;
+        }
+    }
+    // passphrase = phrases[1];
+
+    // console.log(passphrase);
+
+    // LOGIN PAGE
+    await page.waitForSelector(secret.USERNAME_FIELD); // type id, or type 
+    await page.type(secret.USERNAME_FIELD, secret.USERNAME); // type="text"
+    // let passphrase = phrase1[0].concat(phrase2[0]);
+    // let passphrase = '';
+    await page.type(secret.PASSWORD_FIELD, passphrase); // type="password"
+
+    // then press the login button
+    await page.click(secret.LOGIN_BUTTON); // type="submit"
+
+
+    await new Promise(r => setTimeout(r, 2200)); // wait for popup
+
+    /// GRAB IFRAME SELECTOR
+    // https://newassets.hcaptcha.com/captcha/v1
+    // #checkbox
+
+    // uses an iframe for the captcha. fun stuff to deal with
+    attempt: try {
+        // await page.waitForSelector(secret.IFRAME1, {hidden: false, delay: 200});
+        console.log('her;');
+        // FIND HCAPTCHA IFRAME
+   
+        const iframes = await page.frames();
+        const iframe_found = iframes.find((frame) => frame.url().includes(secret.IFRAME1));
+        console.log(iframe_found);
+        await iframe_found.click(secret.HCAPTCHA_BUTTON);
+     
+        console.log("first button pressed");
+        
+     
+
+
+        // DO MANUAL CAPTCHA
+
+    
+
+        await new Promise(r => setTimeout(r, 2000));
+        const frames2 = await page.frames();
+        // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
+        const frame2 = frames2.find((frame) => frame.url().includes(secret.IFRAME1));
+        // console.log(frame2);
+        await frame2.click("[id=menu-info]");
+
+
+        console.log('second button');
+
+
+
+        await new Promise(r => setTimeout(r, 1000));
+        const frames3 = await page.frames();
+        // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
+        const frame3 = frames3.find((frame) => frame.url().includes(secret.IFRAME1));
+        // console.log(frame2);
+        await frame3.click("[id=text_challenge]");
+        console.log('third button');
+         
+
+        // now with the first question read, lets open up deepai and try
+        //  DEEPAI 
+        // consts     
+        const url_ai = "https://deepai.org/chat";
+        // can you answer this question with a yes or no: 
+        const initq = "can you answer this question with a yes or no: ";
+
+        /*****
+        * 1 *
+        ****/
+        for (let i = 0; i <= 10; i++) {
+            await new Promise(r => setTimeout(r, 2000));
+            const frames4 = await page.frames();
+            // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
+            const frame4 = frames4.find((frame) => frame.url().includes(secret.IFRAME1));
+            // console.log(frame2);
+            let read_text = await frame4.$eval("#prompt-text > span", (el) => el.innerText);
+            console.log(read_text);
+            // await page.screenshot({ path: 'done.png' });
+
+            // create a new page for deepai, and maybe login and whatnot?
+            const browser_ai = await p_extra.launch({
+                executablePath: secret.EXEC_PATH,
+                defaultViewport: null,
+                headless: false, // dont run headless, to see what is going on in the browser
+                // args: ['--disable-web-security', // disable a bunch of shit
+                //     '--disable-features=IsolateOrigins,site-per-process',
+                //     '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
+                //     '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end'],
+
+            });
+
+            let page_ai = await browser_ai.newPage();
+            await page_ai.goto(url_ai, {
+                waitUntil: "networkidle2",
+            });
+
+
+            // find the text box to enter the question
+
+            // then get use the text from the hcaptcha and concatenate
+            await page_ai.waitForSelector('#chatboxWrapperId_0 > textarea'); // type id, or type 
+            // simulate a scroll with down key
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.type('#chatboxWrapperId_0 > textarea', initq.concat(read_text)); // type="text"
+
+
+            await page_ai.focus('#chatSubmitButton');
+            await new Promise(r => setTimeout(r, 1000));
+            // const [button_scroll] = await page_ai.$x("#chatSubmitButton");
+            // await page_ai.evaluate((element) => { element.scrollIntoView(); }, button_scroll);
+
+            await page_ai.waitForSelector('#chatSubmitButton'); // type id, or type 
+            await page_ai.click('#chatSubmitButton');
+
+
+            // how to get rid of ads, or scroll down.    
+            await new Promise(r => setTimeout(r, 2000));
+            //const frames5 = await page_ai.frames();
+            // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
+            //const frame5 = frames5.find((frame) => frame.url().includes("https://newassets.hcaptcha.com/captcha/v1"));
+            // console.log(frame2);
+            //let read_answer1 = await frame5.$eval("body > div.outputBox", (el) => el.innerText);
+            await page_ai.waitForSelector('body > div.outputBox'); // type id, or type 
+            read_answer1 = await page_ai.$eval("body > div.outputBox", (el) => el.innerText);
+            // await page_ai.screenshot({ path: 'done_ai.png' });
+            await browser_ai.close(); // close browser for next step
+            // console.log(read_answer1);
+            real_answer1 = read_answer1.substring(0, 3);
+            // check for period for no, other wise should be yes, then add newline to "press" enter
+            if (real_answer1.includes('.')) {
+                real_answer1 = real_answer1.substring(0, 2);
+            }
+            real_answer1 = real_answer1.concat('\n');
+
+            console.log(real_answer1);
+
+
+            // then find the answer from deepai and grab it, and then go back to discord and enter it into the text challenge box
+            await new Promise(r => setTimeout(r, 1000));
+            const frames7 = await page.frames();
+            // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
+            const frame7 = frames7.find((frame) => frame.url().includes("https://newassets.hcaptcha.com/captcha/v1"));
+            // console.log(frame2);
+            await frame7.type("body > div > div.challenge-container > div > div > div.challenge-input > input", real_answer1, { delay: 50 });
+            console.log("enter an answer");
+            // await page.screenshot({ path: 'done.png' });
+            // then click next text challenge and repeat
+            await new Promise(r => setTimeout(r, 100));
+
+        }
+
+
+
+
+        
+        break attempt;
+       
+
+    } catch (captcha_error) {
+        // await page.screenshot({ path: 'done.png' });
+        console.log("ERROR - or completed the password so now what to do?");
+
+
+    } finally {
+        // if you want to compile a visual log
+        // await page.screenshot({ path: 'secret.png' });
+        file_io.appendFile('.secretfailed', passphrase.concat('\n'), (err) => {
+            if (err) {
+                console.log("Something went wrong, oops");
+                throw err;
+            }
+            else
+                console.log("something went right");
+        });
+        console.log("logging used password");
+    }
+
+
+
 
 
 }
