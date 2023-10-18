@@ -7,12 +7,6 @@
  */
 
 /***********************
- * SECRET IMPORTS 
- **********************/
-// import { } from 
-// const _SECRETS = require("./secret.json");
-
-/***********************
  * PUPPETEER IMPORTS 
  **********************/
 // const puppeteer = require('puppeteer'); // for regular puppeteer - overshadowed by puppeteer-extra
@@ -20,11 +14,12 @@ const puppeteer_extra = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer_extra.use(StealthPlugin); // use the stealth plugin in to help deter bot detection
 
-// FILE OBJECT
+// FILE OBJECT AND READING SECRET DATA
 const file_io = require('fs'); // for file input and output
-
+let secretdata = file_io.readFileSync('.secret.json');
+const secret = JSON.parse(secretdata);
 // read static secrets
-
+;
 
 // URL CONSTS FOR TESTING
 // const boturl = 'https://bot.sannysoft.com/'; // test if you look like a bot or not
@@ -46,7 +41,7 @@ const main = async () => {
     // });
 
     // testing
-    console.log("USER: " + _SECRETS.USERNAME + "\nPASS"+_SECRETS.PASSWORD);
+    console.log("USER: " + secret.USERNAME + "\nPASS: "+ secret.URL);
 
 
 }

@@ -1,0 +1,16 @@
+{
+    "USERNAME": "test@user.com",
+    "EXEC_PATH": "C:\\ProgramTest\\chrome.exe",
+    "AI_URL": "https://testai.com/chat",
+    "URL": "https://website.com/login",
+    "USERNAME_FIELD": "[type=text]",
+    "PASSWORD_FIELD": "[type=password]",
+    "LOGIN_BUTTON": "[type=submit]",
+    "IFRAME1": "frame url",
+    "HCAPTCHA_BUTTON": "[type=button]",
+    "iframe2": "extra iframe",
+    "extra_field": "extra button",
+    "iframe3": "extra iframe",
+    "extra_field": "extra button",
+    "iframe4": "extra iframe"
+}
