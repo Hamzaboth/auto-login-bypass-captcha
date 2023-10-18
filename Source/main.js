@@ -28,7 +28,7 @@ const secret = JSON.parse(secretdata);
 const main = async () => {
     const browser = await puppeteer_extra.launch({
         executablePath: secret.EXEC_PATH,
-        defaultViewport: null, // wow so in fullscreen, it clicks the right button, in default view it accidently clicks the button
+        // defaultViewport: null, // wow so in fullscreen, it clicks the right button, in default view it accidently clicks the button
         headless: false, // dont run headless, to see what is going on in the browser
         // args: ['--disable-web-security', // disable a bunch of shit
         //     '--disable-features=IsolateOrigins,site-per-process',
@@ -81,48 +81,44 @@ const main = async () => {
     // uses an iframe for the captcha. fun stuff to deal with
     attempt: try {
         // await page.waitForSelector(secret.IFRAME1, {hidden: false, delay: 200});
-        console.log('her;');
-        // FIND HCAPTCHA IFRAME
-   
-        const iframes = await page.frames();
-        const iframe_found = iframes.find((frame) => frame.url().includes(secret.IFRAME1));
-        console.log(iframe_found);
-        await iframe_found.click(secret.HCAPTCHA_BUTTON);
+        console.log('here');
+        // // FIND HCAPTCHA IFRAME
+        await page.click('[type=button]'); // so far this is only thing that works..
+        console.log('clicked');
+        // const iframes = await page.frames();
+        // const iframe_found = iframes.find((frame) => frame.url().includes(secret.IFRAME1));
+        // console.log(iframe_found);
+        // await iframe_found.click(secret.HCAPTCHA_BUTTON);
      
-        console.log("first button pressed");
+        // console.log("first button pressed");
         
      
 
 
-        // DO MANUAL CAPTCHA
+        // DO MANUAL CAPTCHA   
 
-    
-
+        // select the menu info
         await new Promise(r => setTimeout(r, 2000));
-        const frames2 = await page.frames();
-        // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
+        const frames2 = await page.frames();       
         const frame2 = frames2.find((frame) => frame.url().includes(secret.IFRAME1));
         // console.log(frame2);
         await frame2.click("[id=menu-info]");
 
-
         console.log('second button');
 
-
-
+        // Select Text Challenge
         await new Promise(r => setTimeout(r, 1000));
         const frames3 = await page.frames();
-        // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
-        const frame3 = frames3.find((frame) => frame.url().includes(secret.IFRAME1));
+                const frame3 = frames3.find((frame) => frame.url().includes(secret.IFRAME1));
         // console.log(frame2);
         await frame3.click("[id=text_challenge]");
         console.log('third button');
          
 
-        // now with the first question read, lets open up deepai and try
-        //  DEEPAI 
+        
+        //  reading and using DEEPAI to answer
         // consts     
-        const url_ai = "https://deepai.org/chat";
+        const url_ai = secret.AI_URL;
         // can you answer this question with a yes or no: 
         const initq = "can you answer this question with a yes or no: ";
 
@@ -131,16 +127,15 @@ const main = async () => {
         ****/
         for (let i = 0; i <= 10; i++) {
             await new Promise(r => setTimeout(r, 2000));
-            const frames4 = await page.frames();
-            // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
+            const frames4 = await page.frames();            
             const frame4 = frames4.find((frame) => frame.url().includes(secret.IFRAME1));
-            // console.log(frame2);
+            
             let read_text = await frame4.$eval("#prompt-text > span", (el) => el.innerText);
             console.log(read_text);
-            // await page.screenshot({ path: 'done.png' });
+            
 
-            // create a new page for deepai, and maybe login and whatnot?
-            const browser_ai = await p_extra.launch({
+            // create a new page for deepai, instead of having to scroll and find new texts. keep it simple with static homepage
+            const browser_ai = await puppeteer_extra.launch({
                 executablePath: secret.EXEC_PATH,
                 defaultViewport: null,
                 headless: false, // dont run headless, to see what is going on in the browser
@@ -174,23 +169,17 @@ const main = async () => {
 
             await page_ai.focus('#chatSubmitButton');
             await new Promise(r => setTimeout(r, 1000));
-            // const [button_scroll] = await page_ai.$x("#chatSubmitButton");
-            // await page_ai.evaluate((element) => { element.scrollIntoView(); }, button_scroll);
-
-            await page_ai.waitForSelector('#chatSubmitButton'); // type id, or type 
+       
+            await page_ai.waitForSelector('#chatSubmitButton'); // 
             await page_ai.click('#chatSubmitButton');
 
 
-            // how to get rid of ads, or scroll down.    
+             
             await new Promise(r => setTimeout(r, 2000));
-            //const frames5 = await page_ai.frames();
-            // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
-            //const frame5 = frames5.find((frame) => frame.url().includes("https://newassets.hcaptcha.com/captcha/v1"));
-            // console.log(frame2);
-            //let read_answer1 = await frame5.$eval("body > div.outputBox", (el) => el.innerText);
+       
             await page_ai.waitForSelector('body > div.outputBox'); // type id, or type 
             read_answer1 = await page_ai.$eval("body > div.outputBox", (el) => el.innerText);
-            // await page_ai.screenshot({ path: 'done_ai.png' });
+            
             await browser_ai.close(); // close browser for next step
             // console.log(read_answer1);
             real_answer1 = read_answer1.substring(0, 3);
@@ -206,35 +195,30 @@ const main = async () => {
             // then find the answer from deepai and grab it, and then go back to discord and enter it into the text challenge box
             await new Promise(r => setTimeout(r, 1000));
             const frames7 = await page.frames();
-            // const frame1 = frames.find((frame) => frame.title() === "Main content of the hCaptcha challenge");
-            const frame7 = frames7.find((frame) => frame.url().includes("https://newassets.hcaptcha.com/captcha/v1"));
+            
+            const frame7 = frames7.find((frame) => frame.url().includes(secret.IFRAME1));
             // console.log(frame2);
             await frame7.type("body > div > div.challenge-container > div > div > div.challenge-input > input", real_answer1, { delay: 50 });
             console.log("enter an answer");
-            // await page.screenshot({ path: 'done.png' });
+           
             // then click next text challenge and repeat
             await new Promise(r => setTimeout(r, 100));
 
         }
-
-
-
-
-        
-        break attempt;
+       
+        break attempt; // break off from try block, continue on
        
 
     } catch (captcha_error) {
         // await page.screenshot({ path: 'done.png' });
         console.log("ERROR - or completed the password so now what to do?");
 
-
     } finally {
         // if you want to compile a visual log
         // await page.screenshot({ path: 'secret.png' });
         file_io.appendFile('.secretfailed', passphrase.concat('\n'), (err) => {
             if (err) {
-                console.log("Something went wrong, oops");
+                console.log("Something went wrong with file, oops");
                 throw err;
             }
             else
@@ -242,10 +226,6 @@ const main = async () => {
         });
         console.log("logging used password");
     }
-
-
-
-
 
 }
 
