@@ -64,8 +64,6 @@ const main = async () => {
     // LOGIN PAGE
     await page.waitForSelector(secret.USERNAME_FIELD); // type id, or type 
     await page.type(secret.USERNAME_FIELD, secret.USERNAME); // type="text"
-    // let passphrase = phrase1[0].concat(phrase2[0]);
-    // let passphrase = '';
     await page.type(secret.PASSWORD_FIELD, passphrase); // type="password"
 
     // then press the login button
@@ -80,17 +78,20 @@ const main = async () => {
 
     // uses an iframe for the captcha. fun stuff to deal with
     attempt: try {
-        // await page.waitForSelector(secret.IFRAME1, {hidden: false, delay: 200});
-        console.log('here');
+        //await page.waitForSelector(secret.IFRAME1, {hidden: false, delay: 200});
+        
         // // FIND HCAPTCHA IFRAME
         await page.click('[type=button]'); // so far this is only thing that works..
         console.log('clicked');
         // const iframes = await page.frames();
         // const iframe_found = iframes.find((frame) => frame.url().includes(secret.IFRAME1));
-        // console.log(iframe_found);
+        // // const test = iframe_found.$(secret.HCAPTCHA_BUTTON);
+        
+        // await iframe_found.waitForSelector(secret.HCAPTCHA_BUTTON);
+        // console.log('here');
         // await iframe_found.click(secret.HCAPTCHA_BUTTON);
      
-        // console.log("first button pressed");
+        console.log("captcha pressed");
         
      
 
@@ -104,7 +105,7 @@ const main = async () => {
         // console.log(frame2);
         await frame2.click("[id=menu-info]");
 
-        console.log('second button');
+        console.log('menu button');
 
         // Select Text Challenge
         await new Promise(r => setTimeout(r, 1000));
@@ -112,7 +113,7 @@ const main = async () => {
                 const frame3 = frames3.find((frame) => frame.url().includes(secret.IFRAME1));
         // console.log(frame2);
         await frame3.click("[id=text_challenge]");
-        console.log('third button');
+        console.log('text button');
          
 
         
@@ -133,6 +134,13 @@ const main = async () => {
             let read_text = await frame4.$eval("#prompt-text > span", (el) => el.innerText);
             console.log(read_text);
             
+            // collect a stash of all text challenges. for science
+            file_io.appendFile('text_stash.txt', read_text.concat('\n'), (err) => {
+                if (err) {
+                    console.log("Something went wrong with file, oops");
+                    throw err;
+                }               
+            });
 
             // create a new page for deepai, instead of having to scroll and find new texts. keep it simple with static homepage
             const browser_ai = await puppeteer_extra.launch({
@@ -157,6 +165,8 @@ const main = async () => {
             // then get use the text from the hcaptcha and concatenate
             await page_ai.waitForSelector('#chatboxWrapperId_0 > textarea'); // type id, or type 
             // simulate a scroll with down key
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
             await page_ai.keyboard.press("ArrowDown");
             await page_ai.keyboard.press("ArrowDown");
             await page_ai.keyboard.press("ArrowDown");
@@ -190,6 +200,7 @@ const main = async () => {
             real_answer1 = real_answer1.concat('\n');
 
             console.log(real_answer1);
+        
 
 
             // then find the answer from deepai and grab it, and then go back to discord and enter it into the text challenge box
