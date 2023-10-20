@@ -30,10 +30,10 @@ const main = async () => {
         executablePath: secret.EXEC_PATH,
         // defaultViewport: null, // wow so in fullscreen, it clicks the right button, in default view it accidently clicks the button
         headless: false, // dont run headless, to see what is going on in the browser
-        // args: ['--disable-web-security', // disable a bunch of shit
-        //     '--disable-features=IsolateOrigins,site-per-process',
-        //     '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
-        //     '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end'],
+        args: ['--disable-web-security', // disable a bunch of shit
+            '--disable-features=IsolateOrigins,site-per-process',
+            '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
+            '--flag-switches-begin --disable-site-isolation-trials --flag-switches-end'],
 
     });
     let page = await browser.newPage();
@@ -48,9 +48,10 @@ const main = async () => {
     phrases = phrases.split('\n');
 
     // CHECK PASSPHRASE AGAINST USED PREVIOUSLY
-    let passphrase = 'wrong';
+    let passphrase = 'wrong'; // init to something incase file read and check fails
     let used_words = file_io.readFileSync(".secretfailed").toString();
 
+    // loop through all previously failed/used passphrases, to select a new one to try
     for (const word of phrases) {
         if (!(used_words.includes(word))) {
             passphrase = word;
@@ -82,7 +83,7 @@ const main = async () => {
         
         // // FIND HCAPTCHA IFRAME
         await page.click('[type=button]'); // so far this is only thing that works..
-        console.log('clicked');
+        
         // const iframes = await page.frames();
         // const iframe_found = iframes.find((frame) => frame.url().includes(secret.IFRAME1));
         // // const test = iframe_found.$(secret.HCAPTCHA_BUTTON);
@@ -90,6 +91,14 @@ const main = async () => {
         // await iframe_found.waitForSelector(secret.HCAPTCHA_BUTTON);
         // console.log('here');
         // await iframe_found.click(secret.HCAPTCHA_BUTTON);
+        // let parent = document.getElementsByClassName('content-1ijuZ8');
+        console.log("step 1");
+
+        // const elementframe = await page.$('div#checkbox');
+        // const frametest= await elementframe.contentFrame();
+        // console.log("step 2");
+        // await frametest.click('#checkbox');
+
      
         console.log("captcha pressed");
         
@@ -217,6 +226,16 @@ const main = async () => {
 
         }
        
+        file_io.appendFile('.secretfailed', passphrase.concat('\n'), (err) => {
+            if (err) {
+                console.log("Something went wrong with file, oops");
+                throw err;
+            }
+            else
+                console.log("something went right");
+        });
+        console.log("logging used password");
+        browser.close();
         break attempt; // break off from try block, continue on
        
 
@@ -227,15 +246,9 @@ const main = async () => {
     } finally {
         // if you want to compile a visual log
         // await page.screenshot({ path: 'secret.png' });
-        file_io.appendFile('.secretfailed', passphrase.concat('\n'), (err) => {
-            if (err) {
-                console.log("Something went wrong with file, oops");
-                throw err;
-            }
-            else
-                console.log("something went right");
-        });
-        console.log("logging used password");
+   
+        await new Promise(r => setTimeout(r, 2000));
+        process.exit(); // exit async program
     }
 
 }
@@ -243,3 +256,4 @@ const main = async () => {
 
 // CALL MAIN FUNCTION
 main();
+return; // exit program
