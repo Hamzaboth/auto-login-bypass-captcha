@@ -6,6 +6,8 @@
  * 
  */
 
+// TODO - add check for good password or bad. if bad, add to failed, if good add to solution
+
 /***********************
  * PUPPETEER IMPORTS 
  **********************/
@@ -80,14 +82,14 @@ const main = async () => {
     // uses an iframe for the captcha. fun stuff to deal with
     attempt: try {
         //await page.waitForSelector(secret.IFRAME1, {hidden: false, delay: 200});
-        
+
         // // FIND HCAPTCHA IFRAME
         await page.click('[type=button]'); // so far this is only thing that works..
-        
+
         // const iframes = await page.frames();
         // const iframe_found = iframes.find((frame) => frame.url().includes(secret.IFRAME1));
         // // const test = iframe_found.$(secret.HCAPTCHA_BUTTON);
-        
+
         // await iframe_found.waitForSelector(secret.HCAPTCHA_BUTTON);
         // console.log('here');
         // await iframe_found.click(secret.HCAPTCHA_BUTTON);
@@ -99,17 +101,17 @@ const main = async () => {
         // console.log("step 2");
         // await frametest.click('#checkbox');
 
-     
+
         console.log("captcha pressed");
-        
-     
+
+
 
 
         // DO MANUAL CAPTCHA   
 
         // select the menu info
         await new Promise(r => setTimeout(r, 2000));
-        const frames2 = await page.frames();       
+        const frames2 = await page.frames();
         const frame2 = frames2.find((frame) => frame.url().includes(secret.IFRAME1));
         // console.log(frame2);
         await frame2.click("[id=menu-info]");
@@ -119,13 +121,13 @@ const main = async () => {
         // Select Text Challenge
         await new Promise(r => setTimeout(r, 1000));
         const frames3 = await page.frames();
-                const frame3 = frames3.find((frame) => frame.url().includes(secret.IFRAME1));
+        const frame3 = frames3.find((frame) => frame.url().includes(secret.IFRAME1));
         // console.log(frame2);
         await frame3.click("[id=text_challenge]");
         console.log('text button');
-         
 
-        
+
+
         //  reading and using DEEPAI to answer
         // consts     
         const url_ai = secret.AI_URL;
@@ -137,18 +139,18 @@ const main = async () => {
         ****/
         for (let i = 0; i <= 10; i++) {
             await new Promise(r => setTimeout(r, 2000));
-            const frames4 = await page.frames();            
+            const frames4 = await page.frames();
             const frame4 = frames4.find((frame) => frame.url().includes(secret.IFRAME1));
-            
+
             let read_text = await frame4.$eval("#prompt-text > span", (el) => el.innerText);
             console.log(read_text);
-            
+
             // collect a stash of all text challenges. for science
             file_io.appendFile('text_stash.txt', read_text.concat('\n'), (err) => {
                 if (err) {
                     console.log("Something went wrong with file, oops");
                     throw err;
-                }               
+                }
             });
 
             // create a new page for deepai, instead of having to scroll and find new texts. keep it simple with static homepage
@@ -188,17 +190,17 @@ const main = async () => {
 
             await page_ai.focus('#chatSubmitButton');
             await new Promise(r => setTimeout(r, 1000));
-       
+
             await page_ai.waitForSelector('#chatSubmitButton'); // 
             await page_ai.click('#chatSubmitButton');
 
 
-             
+
             await new Promise(r => setTimeout(r, 2000));
-       
+
             await page_ai.waitForSelector('body > div.outputBox'); // type id, or type 
             read_answer1 = await page_ai.$eval("body > div.outputBox", (el) => el.innerText);
-            
+
             await browser_ai.close(); // close browser for next step
             // console.log(read_answer1);
             real_answer1 = read_answer1.substring(0, 3);
@@ -209,23 +211,55 @@ const main = async () => {
             real_answer1 = real_answer1.concat('\n');
 
             console.log(real_answer1);
-        
+
 
 
             // then find the answer from deepai and grab it, and then go back to discord and enter it into the text challenge box
             await new Promise(r => setTimeout(r, 1000));
             const frames7 = await page.frames();
-            
+
             const frame7 = frames7.find((frame) => frame.url().includes(secret.IFRAME1));
             // console.log(frame2);
             await frame7.type("body > div > div.challenge-container > div > div > div.challenge-input > input", real_answer1, { delay: 50 });
-            console.log("enter an answer");
-           
+            console.log("entered an answer");
+
             // then click next text challenge and repeat
             await new Promise(r => setTimeout(r, 100));
 
         }
-       
+
+        await new Promise(r => setTimeout(r, 500));
+        // check for correct login or not?
+        const failed_attempt = await page.waitForSelector("#\:r1\:"); // wait for failed login div,span
+        // or
+        /**
+         *  await page.waitForSelector('.gender > [label=Male]');
+const element = await page.$('.gender > [label=Male]');
+const text = await (await element.getProperty('textContent')).jsonValue();
+console.log(text);
+         */
+        console.log('onething?');
+        if (failed_attempt) {
+            console.log('possibly?');
+        }
+        else {
+            console.log('somethinge else');
+        }
+
+        break attempt; // break off from try block, continue on
+
+
+    } catch (captcha_error) {
+        // await page.screenshot({ path: 'done.png' });
+        console.log("ERROR - or completed the password so now what to do?");
+
+    } finally {
+        // if you want to compile a visual log
+        // await page.screenshot({ path: 'secret.png' });
+
+
+
+        // when failed, append to failed file
         file_io.appendFile('.secretfailed', passphrase.concat('\n'), (err) => {
             if (err) {
                 console.log("Something went wrong with file, oops");
@@ -235,20 +269,10 @@ const main = async () => {
                 console.log("something went right");
         });
         console.log("logging used password");
-        browser.close();
-        break attempt; // break off from try block, continue on
-       
+        //browser.close();
 
-    } catch (captcha_error) {
-        // await page.screenshot({ path: 'done.png' });
-        console.log("ERROR - or completed the password so now what to do?");
-
-    } finally {
-        // if you want to compile a visual log
-        // await page.screenshot({ path: 'secret.png' });
-   
-        await new Promise(r => setTimeout(r, 2000));
-        process.exit(); // exit async program
+        // await new Promise(r => setTimeout(r, 2000));
+        // process.exit(); // exit async program
     }
 
 }
@@ -256,4 +280,4 @@ const main = async () => {
 
 // CALL MAIN FUNCTION
 main();
-return; // exit program
+//return; // exit program
