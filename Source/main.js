@@ -172,12 +172,12 @@ const main = async () => {
 
 
             // find the text box to enter the question
-
+            await page_ai.keyboard.press("ArrowDown");
+            await page_ai.keyboard.press("ArrowDown");
             // then get use the text from the hcaptcha and concatenate
             await page_ai.waitForSelector('#chatboxWrapperId_0 > textarea'); // type id, or type 
             // simulate a scroll with down key
-            await page_ai.keyboard.press("ArrowDown");
-            await page_ai.keyboard.press("ArrowDown");
+         
             await page_ai.keyboard.press("ArrowDown");
             await page_ai.keyboard.press("ArrowDown");
             await page_ai.keyboard.press("ArrowDown");
