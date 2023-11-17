@@ -137,7 +137,7 @@ const main = async () => {
         /*****
         * 1 *
         ****/
-        for (let i = 0; i <= 10; i++) {
+        for (let i = 0; i <= 22; i++) {
             await new Promise(r => setTimeout(r, 2000));
             const frames4 = await page.frames();
             const frame4 = frames4.find((frame) => frame.url().includes(secret.IFRAME1));
@@ -145,19 +145,13 @@ const main = async () => {
             let read_text = await frame4.$eval("#prompt-text > span", (el) => el.innerText);
             console.log(read_text);
 
-            // collect a stash of all text challenges. for science
-            file_io.appendFile('text_stash.txt', read_text.concat('\n'), (err) => {
-                if (err) {
-                    console.log("Something went wrong with file, oops");
-                    throw err;
-                }
-            });
+          
 
             // create a new page for deepai, instead of having to scroll and find new texts. keep it simple with static homepage
             const browser_ai = await puppeteer_extra.launch({
                 executablePath: secret.EXEC_PATH,
                 defaultViewport: null,
-                headless: false, // dont run headless, to see what is going on in the browser
+                headless: true, // dont run headless, to see what is going on in the browser
                 // args: ['--disable-web-security', // disable a bunch of shit
                 //     '--disable-features=IsolateOrigins,site-per-process',
                 //     '--disable-features=IsolateOrigins,site-per-process,SitePerProcess',
@@ -167,16 +161,18 @@ const main = async () => {
 
             let page_ai = await browser_ai.newPage();
             await page_ai.goto(url_ai, {
-                waitUntil: "networkidle2",
+                 waitUntil: "networkidle2",
             });
 
-
+            // await new Promise(r => setTimeout(r, 1000));
             // find the text box to enter the question
+            console.log("waiting for PAGE?...\n");
             await page_ai.keyboard.press("ArrowDown");
             await page_ai.keyboard.press("ArrowDown");
             // then get use the text from the hcaptcha and concatenate
             await page_ai.waitForSelector('#chatboxWrapperId_0 > textarea'); // type id, or type 
             // simulate a scroll with down key
+            // console.log("waiting for TEXTBOX?...\n");
          
             await page_ai.keyboard.press("ArrowDown");
             await page_ai.keyboard.press("ArrowDown");
@@ -212,6 +208,14 @@ const main = async () => {
 
             console.log(real_answer1);
 
+              // collect a stash of all text challenges. for science
+              file_io.appendFile('text_stash.txt', read_text.concat(real_answer1), (err) => {
+                if (err) {
+                    console.log("Something went wrong with file, oops");
+                    throw err;
+                }
+            });
+
 
 
             // then find the answer from deepai and grab it, and then go back to discord and enter it into the text challenge box
@@ -224,7 +228,7 @@ const main = async () => {
             console.log("entered an answer");
 
             // then click next text challenge and repeat
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 300));
 
         }
 
@@ -266,9 +270,9 @@ console.log(text);
                 throw err;
             }
             else
-                console.log("something went right");
+            console.log("logging used password");
         });
-        console.log("logging used password");
+        
         //browser.close();
 
         // await new Promise(r => setTimeout(r, 2000));
