@@ -52,14 +52,16 @@ const main = async () => {
     // CHECK PASSPHRASE AGAINST USED PREVIOUSLY
     let passphrase = 'wrong'; // init to something incase file read and check fails
     let used_words = file_io.readFileSync(".secretfailed").toString();
-
+    let password_count = 0;
     // loop through all previously failed/used passphrases, to select a new one to try
     for (const word of phrases) {
+        password_count++;
         if (!(used_words.includes(word))) {
-            passphrase = word;
+            passphrase = word;            
             break;
         }
     }
+    
     // passphrase = phrases[1];
 
     // console.log(passphrase);
@@ -255,6 +257,8 @@ console.log(text);
 
     } catch (captcha_error) {
         // await page.screenshot({ path: 'done.png' });
+
+        
         console.log("ERROR - or completed the password so now what to do?");
 
     } finally {
@@ -270,8 +274,10 @@ console.log(text);
                 throw err;
             }
             else
-            console.log("logging used password");
+            console.log("logging used password, number: ".concat(password_count));
+            
         });
+
         
         //browser.close();
 
@@ -281,6 +287,16 @@ console.log(text);
 
 }
 
+
+function lineCount( text ) {
+    var nLines = 0;
+    for( var i = 0, n = text.length;  i < n;  ++i ) {
+        if( text[i] === '\n' ) {
+            ++nLines;
+        }
+    }
+    return nLines;
+}
 
 // CALL MAIN FUNCTION
 main();
